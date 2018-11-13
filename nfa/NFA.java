@@ -98,6 +98,10 @@ public class NFA {
 		return transitions;
 	}
 	
+//	public NFA removeUnreachableStates() {
+//		
+//	}
+	
 	public char[] getSigma() { return this.sigma; }
 	public NFANode getInitialState() { return this.initialState; }
 	
@@ -135,10 +139,17 @@ public class NFA {
 	
 	public static void main(String[] args) {
 		
-		String contents = Reader.readEntireFile("../nfa/src/nfa3");
+		String contents = Reader.readEntireFile("../nfa/src/nfaF");
 		NFA nfa = new NFA(contents);
 		
+		DFA dfa = new DFA(nfa);
+//		DFANode testDFA = DFANode.fromLambdaClosure(nfa.getInitialState());
+//		System.out.println(testDFA.debugToString());
+		
 		System.out.println(nfa.toString());
+		System.out.println("To DFA:");
+		System.out.println(dfa.toString());
+		
 		
 	}
 	

@@ -1,8 +1,8 @@
 package nfa;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 /**
  * NFANodes are nodes whose transitions can reach multiple nodes.  Their lambda transitions
@@ -18,6 +18,7 @@ public class NFANode {
 	
 	public NFANode() {
 		this.transitions = new HashMap<>();
+		this.transitions.put('^', new NFANode[] { this });
 		this.label = "";
 		this.isAccepting = false;
 	}
@@ -37,6 +38,29 @@ public class NFANode {
 		} else {
 			this.transitions.put(sig, new NFANode[] { nextTransition });
 		}
+	}
+	
+	public NFANode[] getLambdaClosure() {
+		ArrayList<NFANode> enclosedNodes = new ArrayList<>();
+		ArrayList<NFANode> candidateNodes = new ArrayList<>();
+		
+		enclosedNodes.add(this);
+		boolean nodeWasAdded = true;
+		
+		while(nodeWasAdded) {
+			nodeWasAdded = false;
+			for(NFANode n : enclosedNodes) {
+				candidateNodes.addAll(Arrays.asList(n.applyTransition('^')));
+			}
+			for(NFANode c : candidateNodes) {
+				if (!enclosedNodes.contains(c)) {
+					enclosedNodes.add(c);
+					nodeWasAdded = true;
+				}
+			}
+		}
+		
+		return enclosedNodes.toArray(new NFANode[enclosedNodes.size()]);
 	}
 	
 	public String getLabel() { return this.label; }
@@ -60,11 +84,14 @@ public class NFANode {
 	}
 	
 	public boolean equals(NFANode other) {
-		return false;
+		return this.label.equals(other.getLabel());
 	}
 
 	public NFANode[] applyTransition(char transition) {
-		return this.transitions.get(transition);
+		if (this.transitions.containsKey(transition)) {
+			return this.transitions.get(transition);
+		}
+		return new NFANode[0];
 	}
 
 }
