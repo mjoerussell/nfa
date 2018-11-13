@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
  * @author mjoer
  *
  */
-public class NFANode implements Node {
+public class NFANode {
 	
-	private HashMap<Character, Node[]> transitions;
+	private HashMap<Character, NFANode[]> transitions;
 	private String label;
 	private boolean isAccepting;
 	
@@ -24,41 +24,19 @@ public class NFANode implements Node {
 	
 	public void setTransitions(char[] sigma, NFANode[][] transitionNodes) {
 		for(int i = 0; i < sigma.length; i++) {
-			transitions.put(sigma[i], transitionNodes[i]);
+			NFANode[] transitionsS = Arrays.copyOf(transitionNodes[i], transitionNodes[i].length);
+			transitions.put(sigma[i], transitionsS);
 		}
 	}
 	
-	@Override
-	public Node getClosure(char transition) {
-		
-		Node[] ts = this.applyTransition(transition);
-//		Node tsLambda = Arrays.asList(ts).stream()		// start with transition char then apply lambda
-//				.map(t -> t.getLambdaClosure())
-//				.reduce(new DFANode(), (a, b) -> ((DFANode) a).combine(b));
-//				.collect(Collectors.toList())
-//				.toArray(new Node[ts.length]);
-		
-		
-		Node ls = this.getLambdaClosure();
-		Node lsTransition = ls.getClosure(transition);		// start with lambda then apply transition char
-		
-		
-		
-		return null; // RETURN COMBINED NODES tsLambda + lsTransition
-		
-	}
-
-	@Override
-	public Node getLambdaClosure() {
-		Node[] lClosure = this.applyTransition(Node.LAMBDA);
-		
-		Node[] lClosureComplete = Arrays.asList(lClosure).stream()
-				.map(l -> l.getLambdaClosure())
-				.collect(Collectors.toList())
-				.toArray(new Node[lClosure.length]);
-		
-		return null; // RETURN COMBINED NODES foldl (\cns n -> combine(n, cns)) (new Node) lClosureComplete
-		
+	public void addTransition(char sig, NFANode nextTransition) {
+		if(this.transitions.containsKey(sig)) {
+			NFANode[] newTransitionList = Arrays.copyOf(this.transitions.get(sig), this.transitions.get(sig).length + 1);
+			newTransitionList[newTransitionList.length - 1] = nextTransition;
+			this.transitions.put(sig, newTransitionList);
+		} else {
+			this.transitions.put(sig, new NFANode[] { nextTransition });
+		}
 	}
 	
 	public String getLabel() { return this.label; }
@@ -71,24 +49,22 @@ public class NFANode implements Node {
 	public String toString() { 
 		StringBuilder sb = new StringBuilder();
 		for(Character c : this.transitions.keySet()) {
-			sb.append("(" + c + "," + this.transitions.get(c).toString() + ") ");
+			sb.append("(" + c + ",{");
+			Arrays.asList(this.transitions.get(c))
+				.stream()
+				.map(n -> n.getLabel())
+				.forEach(label -> sb.append(label + " "));
+			sb.append("}) ");
 		}
 		return sb.toString();
 	}
 	
-	@Override
-	public boolean equals(Node other) {
+	public boolean equals(NFANode other) {
 		return false;
 	}
 
-	@Override
-	public Node[] applyTransition(char transition) {
+	public NFANode[] applyTransition(char transition) {
 		return this.transitions.get(transition);
-	}
-
-	@Override
-	public Character[] getKeys() {
-		return this.transitions.keySet().toArray(new Character[0]);
 	}
 
 }

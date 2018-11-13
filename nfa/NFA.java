@@ -1,7 +1,6 @@
 package nfa;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.stream.Collectors;
 
 public class NFA {
@@ -10,17 +9,8 @@ public class NFA {
 	
 	private NFANode[] states;
 	private char[] sigma;
+	private NFANode initialState;
 	
-	/* Format of NFA files
-	 * 
-	 * 3							<-- Number of states
-	 * 		a b c d					<-- Sigma
-	 * 0:	{0} {0,1} {} {} {1,2,0}	<-- Transitions (correspond to inputs, last = lambda)
-	 * 1:	{} {1} {1} {1} {1}
-	 * 2: 	{} {1,2} {1} {1} {2}
-	 * 0							<-- End of states
-	 * {1,2}						<-- Accepting states
-	 */
 	public NFA(String nfaFileContents) {
 		
 		String[] lines = nfaFileContents.split("\n");
@@ -28,84 +18,128 @@ public class NFA {
 		int numStates = Integer.parseInt(lines[0]);
 
 		//Initialize sigma
-		String[] sigmaStrings = lines[1].split(" ");
-		this.sigma = new char[sigmaStrings.length + 1];
-		for(int i = 0; i < this.sigma.length; i++) {
-			this.sigma[i] = sigmaStrings[i].charAt(0);
+		String sigmaString = Reader.ignoreWhitespace(lines[1]);
+		this.sigma = new char[sigmaString.length() + 1];
+
+		for(int i = 0; i < sigmaString.length(); i++) {
+			this.sigma[i] = sigmaString.charAt(i);
 		}
-		this.sigma[this.sigma.length] = LAMBDA;
+		this.sigma[sigmaString.length()] = LAMBDA;
 		
 		//initialize all of the states in the DFA
 		this.states = new NFANode[numStates];
-		Arrays.fill(this.states, new NFANode());
+		for(int stateNum = 0; stateNum < numStates; stateNum++) {
+			this.states[stateNum] = new NFANode();
+			this.states[stateNum].setLabel(stateNum + "");
+		}
 		
 		//Add the transitions to each state
-		for(int i = 0; i < this.states.length; i++) {
-			int[][] transitionInts = getTransitionsForNode(lines[2 + i]);
-			
-			NFANode[][] transitionNodes = new NFANode[transitionInts.length][];
+		for(int currentState = 0; currentState < this.states.length; currentState++) {
+			String currentStateString = lines[2 + currentState];
+			int[][] transitionInts = getTransitionsForNode(currentStateString);
 			
 			for(int transition = 0; transition < transitionInts.length; transition++) {
-				
 				for(int t = 0; t < transitionInts[transition].length; t++) {
 					int currentTransition = transitionInts[transition][t];
-					transitionNodes[transition][t] = this.states[currentTransition];
+					if(currentTransition != -1) {
+						this.states[currentState].addTransition(this.sigma[transition], this.states[currentTransition]);
+					}
 				}
-				
 			}
-			
-			this.states[i].setTransitions(this.sigma, transitionNodes);
-			this.states[i].setLabel(i + "");
 		}
+		
+		//Set the initial state
+		int initStateNum = Integer.parseInt(lines[2 + numStates]);
+		this.initialState = this.states[initStateNum];
 		
 		//Set the accepting states
-		String[] acceptingStates = lines[2 + numStates + 1].split("{},");
+		String[] acceptingStates = Reader.match(lines[2 + numStates + 1], "\\D");
 		for(String state : acceptingStates) {
-			int stateNum = Integer.parseInt(state);
-			this.states[stateNum].setAccepting(true);
+			if(!state.equals("")) {
+				int stateNum = Integer.parseInt(state);
+				this.states[stateNum].setAccepting(true);
+			}
 		}
-		
-		
 	}
 	
 	private int[][] getTransitionsForNode(String transitionString) {
-		
-		String[] transitionStates = transitionString.substring(1).split(" {}");
+		String[] transitionStates = Reader.tokenize(
+				Reader.ignoreWhitespace(
+						transitionString.substring(transitionString.indexOf(":") + 1)
+				), "{");
+		transitionStates = Arrays.asList(transitionStates)
+				.stream()
+				.map(st -> st.replace("}", ""))
+				.collect(Collectors.toList())
+				.toArray(new String[transitionStates.length]);
 		
 		int[][] transitions = new int[transitionStates.length][];
 		
-		for(int i = 0; i < transitionStates.length; i++) {
-			
-			String[] multiTransitions = transitionStates[i].split(",");
-			transitions[i] = new int[multiTransitions.length];
-			
-			for(int j = 0; j < multiTransitions.length; j++) {
-				transitions[i][j] = Integer.parseInt(multiTransitions[j]);
-			}
+		for (int currentTransition = 0; currentTransition < transitionStates.length; currentTransition++) {
+			String transString = transitionStates[currentTransition];
+			if (transString.equals("")) {
+				transitions[currentTransition] = new int[] { -1 };
+			} else {
+				String[] npTransitions = Reader.tokenize(transString, ",");
+				Integer[] newTransitions = Arrays.asList(npTransitions)
+						.stream()
+						.map(Integer::parseInt)
+						.collect(Collectors.toList())
+						.toArray(new Integer[npTransitions.length]);
 				
+				int[] ntInts = new int[newTransitions.length];
+				for(int i = 0; i < ntInts.length; i++)
+					ntInts[i] = (int) newTransitions[i];
+				
+				transitions[currentTransition] = ntInts;
+			}
 		}
 		
 		return transitions;
 	}
 	
+	public char[] getSigma() { return this.sigma; }
+	public NFANode getInitialState() { return this.initialState; }
+	
+	public NFANode getState(int num) {
+		if (num < 0 || num > this.states.length) 
+			return null;
+		return this.states[num];
+	}
+	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Sigma: " + this.sigma.toString() + "\n");
+		sb.append("Sigma: ");
+		
+		for(char c : this.sigma)
+			sb.append(c + " ");
+		
+		sb.append("\n");
+		
 		sb.append("--------\n");
-		for(NFANode state : this.states) {
-			sb.append(state.toString() + "\n");
+		for(int i = 0; i < this.states.length; i++) {
+			sb.append(i + ": " + this.states[i].toString() + "\n");
 		}
 		sb.append("--------\n");
-		sb.append("0: Initial State\n");
+		sb.append(this.initialState.getLabel() + ": Initial State\n[");
 		
-		NFANode[] acceptingStates = Arrays.asList(this.states)
+		Arrays.asList(this.states)
 				.stream()
 				.filter(state -> state.isAccepting())
-				.collect(Collectors.toList())
-				.toArray(new NFANode[0]);
-		sb.append(acceptingStates.toString() + ": Accepting State(s)");
+				.map(state -> state.getLabel())
+				.forEach(label -> sb.append(label + " "));
 		
+		sb.append("]: Accepting State(s)");
 		return sb.toString();
+	}
+	
+	public static void main(String[] args) {
+		
+		String contents = Reader.readEntireFile("../nfa/src/nfa3");
+		NFA nfa = new NFA(contents);
+		
+		System.out.println(nfa.toString());
+		
 	}
 	
 }
