@@ -140,17 +140,54 @@ public class NFA {
 		return sb.toString();
 	}
 	
+	public String toPresentationString(int limit) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Sigma:\t");
+		
+		for(char c : this.sigma)
+			sb.append(c + "");
+		
+		sb.append("\n---------------\n");
+		
+		limit = this.states.length - limit > 5 ? limit : this.states.length;
+		
+		for(int i = 0; i < limit; i++) {
+			sb.append(this.states[i].toString() + "\n");
+		}
+		
+		if(limit != this.states.length) {
+			sb.append("....\n");
+			for(int i = this.states.length - 6; i < this.states.length; i++) {
+				sb.append(this.states[i].toString() + "\n");
+			}
+		}
+			
+		sb.append("---------------\n");
+		sb.append(this.initialState.getLabel() + ": Initial State\n[");
+		
+		int groupCount = 1;
+		for(NFANode s : this.acceptingStates) {
+			sb.append(s.getLabel() + " ");
+			if (groupCount % 10 == 0)
+				sb.append("\n");
+			groupCount++;
+		}
+		
+		sb.append("]: Accepting state(s)");
+		return sb.toString();
+	}
+	
 	public static void main(String[] args) {
 		
-		String contents = Reader.readEntireFile("../nfa/src/nfa2");
+		String contents = Reader.readEntireFile("../nfa/src/nfaF");
 		String[] testInputs = Reader.readIntoLines("../nfa/src/inputStrings.txt");
 		
 		NFA nfa = new NFA(contents);
 		DFA dfa = new DFA(nfa);
 		
-		System.out.println(nfa.toString());
+		System.out.println(nfa.toPresentationString(30));
 		System.out.println("\nTo DFA:\n");
-		System.out.println(dfa.toString());
+		System.out.println(dfa.toPresentationString(30));
 		
 		System.out.println("The following strings are accepted:");
 		Arrays.asList(testInputs).stream()

@@ -115,5 +115,41 @@ public class DFA {
 		return sb.toString();
 	}
 	
+	public String toPresentationString(int limit) {
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("Sigma:\t");
+		for(char c : this.sigma) {
+			sb.append(c + "\t");
+		}
+		sb.append("\n---------------\n");
+		
+		limit = this.states.length - limit > 5 ? limit : this.states.length;
+		
+		for(int i = 0; i < limit; i++) {
+			sb.append(this.states[i].toString() + "\n");
+		}
+		
+		if(limit != this.states.length) {
+			sb.append("....\n");
+			for(int i = this.states.length - 6; i < this.states.length; i++) {
+				sb.append(this.states[i].toString() + "\n");
+			}
+		}
+		
+		sb.append(this.initialState.getLabel() + ": Initial State\n");
+		sb.append("[");
+		int groupCount = 1;
+		for(DFANode s : this.acceptingStates) {
+			sb.append(s.getLabel() + " ");
+			if (groupCount % 10 == 0)
+				sb.append("\n");
+			groupCount++;
+		}
+		sb.append("]: Accepting state(s)");
+		
+		return sb.toString();
+	}
+	
 	
 }
