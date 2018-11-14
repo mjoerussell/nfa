@@ -25,6 +25,10 @@ public class Reader {
 		return sb.toString();
 	}
 	
+	public static String[] readIntoLines(String path) {
+		return Reader.tokenize(Reader.readEntireFile(path), "\n");
+	}
+	
 	public static String[] match(String base, String regex) {
 		String[] tokens = base.split(regex);
 		ArrayList<String> nonEmpty = new ArrayList<>();

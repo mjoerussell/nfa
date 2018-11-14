@@ -22,6 +22,13 @@ public class DFANode {
 		this.enclosed = enclosed;
 	}
 	
+	/**
+	 * Create a new DFANode from the union of several DFANodes.
+	 * The new DFANode will be enclosing the union of NFANodes
+	 * enclosed by inits
+	 * @param inits The DFANodes to be joined
+	 * @return A new DFANode
+	 */
 	public static DFANode fromUnion(DFANode ... inits) {
 		ArrayList<NFANode> uniqueEnclosed = new ArrayList<>();
 
@@ -35,10 +42,23 @@ public class DFANode {
 		return new DFANode(uniqueEnclosed.toArray(new NFANode[uniqueEnclosed.size()]));
 	}
 	
+	/**
+	 * Create a new DFANode enclosing the union of lambda closures of
+	 * the NFANodes enclosed by the specified DFANode
+	 * @param nfa The DFANode whose enclosed NFANodes will be evaluated
+	 * @return A new DFANode
+	 */
 	public static DFANode fromLambdaClosure(DFANode dfa) {
 		return DFANode.fromLambdaClosure(dfa.getEnclosed());
 	}
 	
+	/**
+	 * Create a new DFANode enclosing the union of lambda closures of
+	 * the specified NFANodes
+	 * @param nfa The NFANodes whose lambda closures will be
+	 * 		calculated
+	 * @return A new DFANode
+	 */
 	public static DFANode fromLambdaClosure(NFANode ... nfas) {
 		DFANode dfaNode = DFANode.fromUnion(
 				Arrays.asList(nfas)
@@ -49,6 +69,13 @@ public class DFANode {
 		return dfaNode;
 	}
 	
+	/**
+	 * Create a new DFANode enclosing the lambda closure of
+	 * the specified NFANode
+	 * @param nfa The NFANode whose lambda closure will be
+	 * 		calculated
+	 * @return A new DFANode
+	 */
 	public static DFANode fromLambdaClosure(NFANode nfa) {
 		DFANode dfaNode = new DFANode();
 		dfaNode.enclosed = nfa.getLambdaClosure();
@@ -59,10 +86,10 @@ public class DFANode {
 	 * Computes the DFANode that would be reached by taking the specified transition
 	 * from this node.  The computed DFANode is represented by its enclosed NFANodes,
 	 * which are found by applying the following transition steps:
-	 * 	q -> transition
-	 * 	q -> transition -> lambda
-	 * 	q -> lambda -> transition
-	 * 	q -> lambda -> transition -> lambda
+	 * 	q -> transition;
+	 * 	q -> transition -> lambda;
+	 * 	q -> lambda -> transition;
+	 * 	q -> lambda -> transition -> lambda;
 	 * @param transition The transition character to apply (comes from sigma)
 	 * @return A new DFANode represented by enclosed NFANodes
 	 */
@@ -104,6 +131,17 @@ public class DFANode {
 		return enclosedNodes.toArray(new NFANode[enclosedNodes.size()]);
 	}
 	
+	public DFANode applyTransition(char transition) {
+		return this.transitions.get(transition);
+	}
+	
+	/**
+	 * Add a transition by the specified symbol to the specified
+	 * DFANode.  If a transition for the symbol already exists it
+	 * will be overwritten.
+	 * @param sig The symbol to label the transition
+	 * @param nextTransition The node reached by the transition
+	 */
 	public void addTransition(char sig, DFANode nextTransition) {
 		this.transitions.put(sig, nextTransition);
 	}
@@ -113,16 +151,30 @@ public class DFANode {
 	
 	public void setAccepting(boolean a) { this.isAccepting = a; }
 	public boolean isAccepting() { return this.isAccepting; }
+	
+	/**
+	 * Determine if this DFANode is accepting or not. A DFANode is accepting
+	 * if any of its enclosed NFANodes are accepting.
+	 * [SIDE EFFECT] This function will set isAccepting to the return value
+	 * of this function.
+	 * @return True if this node is accepting, false otherwise.
+	 */
 	public boolean computeIsAccepting() {
-		return Arrays.asList(this.enclosed)
+		this.isAccepting = Arrays.asList(this.enclosed)
 				.stream()
 				.anyMatch(n -> n.isAccepting());
+		return this.isAccepting;
 	}
-	
 	
 	public NFANode[] getEnclosed() { return this.enclosed; }
 	public void setEnclosed(NFANode ... nfas) { this.enclosed = nfas; }
 	
+	/**
+	 * Check DFANode equality.  Two DFANodes are equivalent if all of their
+	 * enclosed NFANodes are equivalent.
+	 * @param other The DFANode to compare to this
+	 * @return True if the two nodes are equivalent, false otherwise.
+	 */
 	public boolean equals(DFANode other) {
 		if (this.enclosed.length != other.getEnclosed().length)
 			return false;
@@ -131,8 +183,6 @@ public class DFANode {
 			for(NFANode otherNFA : other.getEnclosed()) {
 				if (otherNFA.equals(nfa))
 					otherContainsNFA = true;
-//				else 	// DEBUG ONLY
-//					System.out.println("NFA: " + nfa.getLabel() + " /= " + otherNFA.getLabel());
 			}
 			if (!otherContainsNFA)
 				return false;
@@ -152,7 +202,6 @@ public class DFANode {
 		for (char c : this.transitions.keySet()) {
 			sb.append("\t" + this.transitions.get(c).getLabel());
 		}
-//		sb.append(" | DEBUG: " + this.debugToString() + "\n");
 		return sb.toString();
 	}
 

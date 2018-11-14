@@ -8,8 +8,9 @@ public class NFA {
 	private final char LAMBDA = '^';
 	
 	private NFANode[] states;
-	private char[] sigma;
+	private NFANode[] acceptingStates;
 	private NFANode initialState;
+	private char[] sigma;
 	
 	public NFA(String nfaFileContents) {
 		
@@ -54,10 +55,14 @@ public class NFA {
 		
 		//Set the accepting states
 		String[] acceptingStates = Reader.match(lines[2 + numStates + 1], "\\D");
+		this.acceptingStates = new NFANode[acceptingStates.length];
+		int count = 0;
 		for(String state : acceptingStates) {
 			if(!state.equals("")) {
 				int stateNum = Integer.parseInt(state);
 				this.states[stateNum].setAccepting(true);
+				this.acceptingStates[count] = this.states[stateNum];
+				count++;
 			}
 		}
 	}
@@ -98,10 +103,6 @@ public class NFA {
 		return transitions;
 	}
 	
-//	public NFA removeUnreachableStates() {
-//		
-//	}
-	
 	public char[] getSigma() { return this.sigma; }
 	public NFANode getInitialState() { return this.initialState; }
 	
@@ -113,46 +114,49 @@ public class NFA {
 	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Sigma: ");
+		sb.append("Sigma:\t");
 		
 		for(char c : this.sigma)
-			sb.append(c + " ");
+			sb.append(c + "");
 		
-		sb.append("\n");
+		sb.append("\n---------------\n");
 		
-		sb.append("--------\n");
-		for(int i = 0; i < this.states.length; i++) {
-			sb.append(i + ": " + this.states[i].toString() + "\n");
+		for(NFANode n : this.states) {
+			sb.append(n.toString() + "\n");
 		}
-		sb.append("--------\n");
+		
+		sb.append("---------------\n");
 		sb.append(this.initialState.getLabel() + ": Initial State\n[");
 		
-		Arrays.asList(this.states)
-				.stream()
-				.filter(state -> state.isAccepting())
-				.map(state -> state.getLabel())
-				.forEach(label -> sb.append(label + " "));
+		int groupCount = 1;
+		for(NFANode s : this.acceptingStates) {
+			sb.append(s.getLabel() + " ");
+			if (groupCount % 10 == 0)
+				sb.append("\n");
+			groupCount++;
+		}
 		
-		sb.append("]: Accepting State(s)");
+		sb.append("]: Accepting state(s)");
 		return sb.toString();
 	}
 	
 	public static void main(String[] args) {
 		
-		String contents = Reader.readEntireFile("../nfa/src/nfaF");
-		NFA nfa = new NFA(contents);
+		String contents = Reader.readEntireFile("../nfa/src/nfa2");
+		String[] testInputs = Reader.readIntoLines("../nfa/src/inputStrings.txt");
 		
+		NFA nfa = new NFA(contents);
 		DFA dfa = new DFA(nfa);
-//		DFANode testDFA = DFANode.fromLambdaClosure(nfa.getInitialState());
-//		System.out.println(testDFA.debugToString());
 		
 		System.out.println(nfa.toString());
-		System.out.println("To DFA:");
+		System.out.println("\nTo DFA:\n");
 		System.out.println(dfa.toString());
 		
-		
+		System.out.println("The following strings are accepted:");
+		Arrays.asList(testInputs).stream()
+			.filter(i -> dfa.testInput(i))
+			.forEach(i -> System.out.println(i));
 	}
-	
 }
 
 
