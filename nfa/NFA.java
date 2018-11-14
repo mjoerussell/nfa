@@ -179,15 +179,29 @@ public class NFA {
 	
 	public static void main(String[] args) {
 		
-		String contents = Reader.readEntireFile("../nfa/src/nfaF");
-		String[] testInputs = Reader.readIntoLines("../nfa/src/inputStrings.txt");
+		if(args.length < 2) {
+			System.out.println("NFA requires (2) arguments");
+			return;
+		}
+		
+		String contents = Reader.readEntireFile(args[0]);
+		String[] testInputs = Reader.readIntoLines(args[1]);
 		
 		NFA nfa = new NFA(contents);
 		DFA dfa = new DFA(nfa);
 		
-		System.out.println(nfa.toPresentationString(30));
-		System.out.println("\nTo DFA:\n");
-		System.out.println(dfa.toPresentationString(30));
+		if(args.length >= 3) {
+			int limit = Integer.parseInt(args[2]);
+			System.out.println(nfa.toPresentationString(limit));
+			System.out.println("\nTo DFA:\n");
+			System.out.println(dfa.toPresentationString(limit));
+		} else {
+			System.out.println(nfa.toString());
+			System.out.println("\nTo DFA:\n");
+			System.out.println(dfa.toString());
+		}
+		
+		
 		
 		System.out.println("The following strings are accepted:");
 		Arrays.asList(testInputs).stream()
