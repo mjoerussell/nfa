@@ -1,0 +1,32 @@
+Sigma:	ab^
+---------------
+0:	(a,{1})  (b,{4})  (^,{0 2})  
+1:	(a,{5})  (b,{2})  (^,{1})  
+2:	(a,{5})  (^,{2})  
+3:	(^,{3 0})  
+4:	(b,{1})  (^,{4 3})  
+5:	(^,{5 4})  
+---------------
+0: Initial State
+[5 ]: Accepting state(s)
+
+To DFA:
+
+Sigma:	a	b	
+---------------
+0: 	1	2
+1: 	1	3
+2: 	1	3
+3: 	1	3
+0: Initial State
+[1 ]: Accepting state(s)
+The following strings are accepted:
+aabaa
+aaaaa
+aaaaaaaaaa
+aaaaaaaa
+aaa
+aaaaaaaaaaaaaaa
+bbaabba
+ba
+abbaabbaabbaabababbaabbaabbaaba

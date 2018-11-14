@@ -1,4 +1,3 @@
-package nfa;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -143,7 +142,7 @@ public class NFA {
 	public String toPresentationString(int limit) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Sigma:\t");
-		
+	
 		for(char c : this.sigma)
 			sb.append(c + "");
 		

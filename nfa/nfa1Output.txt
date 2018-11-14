@@ -1,0 +1,43 @@
+Sigma:	abc^
+---------------
+0:	(^,{0 1 2 3})  
+1:	(a,{4})  (b,{1})  (c,{1})  (^,{1})  
+2:	(a,{2})  (b,{4})  (c,{2})  (^,{2})  
+3:	(a,{3})  (b,{3})  (c,{4})  (^,{3})  
+4:	(a,{4})  (b,{4})  (c,{4})  (^,{4})  
+---------------
+0: Initial State
+[1 2 3 ]: Accepting state(s)
+
+To DFA:
+
+Sigma:	a	b	c	
+---------------
+0: 	1	2	3
+1: 	1	4	5
+2: 	4	2	6
+3: 	5	6	3
+4: 	4	4	7
+5: 	5	7	5
+6: 	7	6	6
+7: 	7	7	7
+0: Initial State
+[0 1 2 3 4 5 6 ]: Accepting state(s)
+The following strings are accepted:
+aabaa
+abbbaaababaab
+aaaaa
+aaaaaaaaaa
+aaaaaaaa
+aaa
+aaaaaaaaaaaaaaa
+bbaabba
+ba
+ababababbbbbab
+abbbbbab
+aabbababb
+bbabbabab
+abbaabbaabbaabababbaabbaabbaaba
+cacaccccaaaaaaaaaaaccc
+cbcbcbcbbbbccc
+ababbbb
