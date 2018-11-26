@@ -1,4 +1,4 @@
-
+package nfa;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,15 +10,27 @@ public class DFANode {
 	private HashMap<Character, DFANode> transitions;
 	private boolean isAccepting;
 	
+//	private ArrayList<DFANode> distinguishable;
+	
 	private NFANode[] enclosed;
 	
 	public DFANode() {
 		this.transitions = new HashMap<>();
+//		this.distinguishable = new ArrayList<>();
+	}
+	
+	public DFANode(DFANode toCopy) {
+		this.label = toCopy.label;
+		this.transitions = new HashMap<>(toCopy.transitions);
+		this.isAccepting = toCopy.isAccepting;
+		this.enclosed = Arrays.copyOf(toCopy.enclosed, toCopy.enclosed.length);
+//		this.distinguishable = new ArrayList<>(toCopy.distinguishable);
 	}
 	
 	public DFANode(NFANode ... enclosed) {
 		this.transitions = new HashMap<>();
 		this.enclosed = enclosed;
+//		this.distinguishable = new ArrayList<>();
 	}
 	
 	/**
@@ -174,19 +186,31 @@ public class DFANode {
 	 * @param other The DFANode to compare to this
 	 * @return True if the two nodes are equivalent, false otherwise.
 	 */
-	public boolean equals(DFANode other) {
-		if (this.enclosed.length != other.getEnclosed().length)
-			return false;
-		for(NFANode nfa : this.enclosed) {
-			boolean otherContainsNFA = false;
-			for(NFANode otherNFA : other.getEnclosed()) {
-				if (otherNFA.equals(nfa))
-					otherContainsNFA = true;
-			}
-			if (!otherContainsNFA)
+	@Override
+	public boolean equals(Object other) {
+		if(other instanceof DFANode) {
+			DFANode otherDFA = (DFANode) other;
+			if (this.enclosed.length != otherDFA.getEnclosed().length)
 				return false;
+			for(NFANode nfa : this.enclosed) {
+				boolean otherContainsNFA = false;
+				for(NFANode otherNFA : otherDFA.getEnclosed()) {
+					if (otherNFA.equals(nfa))
+						otherContainsNFA = true;
+				}
+				if (!otherContainsNFA)
+					return false;
+			}
+			return true;
 		}
-		return true;
+		return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		int hash = 7;
+		hash = 17 * hash + (this.label == null ? this.label.hashCode() : 0);
+		return hash;
 	}
 	
 	public String debugToString() {

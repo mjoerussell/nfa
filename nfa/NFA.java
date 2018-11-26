@@ -1,4 +1,4 @@
-
+package nfa;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -189,11 +189,18 @@ public class NFA {
 		NFA nfa = new NFA(contents);
 		DFA dfa = new DFA(nfa);
 		
+//		long miniStart = System.currentTimeMillis();
+		MinimizedDFA minimized = dfa.minimize();
+//		long miniTime = System.currentTimeMillis() - miniStart;
+//		System.out.println("Minimization took " + miniTime + " ms");
+		
 		if(args.length >= 3) {
 			int limit = Integer.parseInt(args[2]);
 			System.out.println(nfa.toPresentationString(limit));
 			System.out.println("\nTo DFA:\n");
 			System.out.println(dfa.toPresentationString(limit));
+			System.out.println("\nMinimized DFA:\n");
+			System.out.println(minimized.toString());
 		} else {
 			System.out.println(nfa.toString());
 			System.out.println("\nTo DFA:\n");

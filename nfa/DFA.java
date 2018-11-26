@@ -1,4 +1,4 @@
-
+package nfa;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -19,7 +19,6 @@ public class DFA {
 		this.initialState = DFANode.fromLambdaClosure(nfa.getInitialState());
 		
 		stateAcc.add(this.initialState);
-		
 		boolean stateCreated = true;
 		while(stateCreated) {
 			stateCreated = false;
@@ -36,7 +35,8 @@ public class DFA {
 					// If the computed state already exists, then replace it
 					// with the existing one (so that every node with a transition
 					// to it references the same one and not a copy)
-					if (this.stateExists(computed, accSnapshot)) {
+//					if (this.stateExists(computed, accSnapshot)) {
+					if(currentNodes.contains(computed)) {
 						computed = this.getEquivalentState(computed, accSnapshot);
 					} else {
 						stateCreated = true;
@@ -59,6 +59,17 @@ public class DFA {
 				.toArray(new DFANode[0]);
 	}
 	
+	public DFA(DFA toCopy) {
+		this.states = Arrays.copyOf(toCopy.states, toCopy.states.length);
+		this.acceptingStates = Arrays.copyOf(toCopy.acceptingStates, toCopy.acceptingStates.length);
+		this.initialState = new DFANode(toCopy.initialState);
+		this.sigma = Arrays.copyOf(toCopy.sigma, toCopy.sigma.length);
+	}
+	
+	public MinimizedDFA minimize() {
+		return new MinimizedDFA(this);
+	}
+	
 	public boolean testInput(String input) {
 		DFANode currentState = this.initialState;
 		for(char c : input.toCharArray()) {
@@ -69,15 +80,16 @@ public class DFA {
 		return currentState.isAccepting();
 	}
 	
-	private boolean stateExists(DFANode state, DFANode ... checks) {
-		for(DFANode d : checks) {
-			if (d.equals(state)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
+	
+//	private boolean stateExists(DFANode state, DFANode ... checks) {
+//		for(DFANode d : checks) {
+//			if (d.equals(state)) {
+//				return true;
+//			}
+//		}
+//
+//		return false;
+//	}
 	
 	private DFANode getEquivalentState(DFANode state, DFANode ... existingStates) {
 		for(DFANode d : existingStates) {
@@ -87,6 +99,11 @@ public class DFA {
 		}
 		return state;
 	}
+	
+	public DFANode[] getStates() { return this.states; }
+	public DFANode[] getAcceptingStates() { return this.acceptingStates; }
+	public DFANode getInitialState() { return this.initialState; } 
+	public char[] getSigma() { return this.sigma; }
 	
 	public String toString() {
 		
