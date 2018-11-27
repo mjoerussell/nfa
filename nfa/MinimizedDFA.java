@@ -186,6 +186,16 @@ public String toPresentationString(int limit) {
 		
 		return sb.toString();
 	}
+
+	public boolean testInput(String input) {
+		DFANode currentState = this.initialState;
+		for(char c : input.toCharArray()) {
+			currentState = currentState.applyTransition(c);
+			if(currentState == null)
+				return false;
+		}
+		return currentState.isAccepting();
+	}
 	
 	/**
 	 * Remove an item from a list, and then add a multitude of items to the same list

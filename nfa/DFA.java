@@ -235,6 +235,11 @@ public class DFA {
 			System.out.println(mini.toString());
 		}
 		
+		System.out.println("The following strings are accepted:");
+		Arrays.asList(testInputs).stream()
+			.filter(i -> mini.testInput(i))
+			.forEach(i -> System.out.println(i));
+		
 	}
 	
 	
