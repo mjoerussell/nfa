@@ -10,6 +10,53 @@ public class DFA {
 	private DFANode initialState;
 	private char[] sigma;
 	
+	public DFA(String dfaString) {
+		String[] lines = dfaString.split("\n");
+		
+		int numStates = Integer.parseInt(lines[0]);
+		
+		String[] sigmaLine = Reader.tokenize(lines[1], " ");
+		
+		this.sigma = new char[sigmaLine.length - 1];
+		this.states = new DFANode[numStates];
+		
+		for(int i = 0; i < numStates; i++) {
+			this.states[i] = new DFANode();
+		}
+		
+		for(int i = 1; i < sigmaLine.length; i++) {
+			this.sigma[i - 1] = sigmaLine[i].charAt(0);
+		}
+		
+		for(int lineNum = 3; lineNum < 3 + numStates; lineNum++) {
+			String[] transitions = Reader.tokenize(lines[lineNum], " ");
+			int currentStateNum = lineNum - 3;
+			this.states[currentStateNum].setLabel(currentStateNum + "");
+			for(int i = 1; i < transitions.length; i++) {
+				int transitionNum = Integer.parseInt(transitions[i]);
+				char c = this.sigma[i - 1];
+				this.states[currentStateNum].addTransition(c, this.states[transitionNum]);
+			}
+		}
+		
+		int initialStateLineNum = 4 + numStates;
+		String initialStateLabel = Reader.tokenize(lines[initialStateLineNum], ":")[0];
+		this.initialState = this.states[Integer.parseInt(initialStateLabel)];
+		
+		int acceptingStatesLineNum = initialStateLineNum + 1;
+		
+		String[] acceptingStates = Reader.tokenize(Reader.tokenize(lines[acceptingStatesLineNum], ":")[0], ",");
+		this.acceptingStates = new DFANode[acceptingStates.length];
+		
+		for(int i = 0; i < acceptingStates.length; i++) {
+			String s = acceptingStates[i];
+			int stateNum = Integer.parseInt(s);
+			this.states[stateNum].setAccepting(true);
+			this.acceptingStates[i] = this.states[stateNum];
+		}
+		
+	}
+	
 	public DFA(NFA nfa) {
 		
 		ArrayList<DFANode> stateAcc = new ArrayList<>();
@@ -35,7 +82,6 @@ public class DFA {
 					// If the computed state already exists, then replace it
 					// with the existing one (so that every node with a transition
 					// to it references the same one and not a copy)
-//					if (this.stateExists(computed, accSnapshot)) {
 					if(currentNodes.contains(computed)) {
 						computed = this.getEquivalentState(computed, accSnapshot);
 					} else {
@@ -59,13 +105,6 @@ public class DFA {
 				.toArray(new DFANode[0]);
 	}
 	
-	public DFA(DFA toCopy) {
-		this.states = Arrays.copyOf(toCopy.states, toCopy.states.length);
-		this.acceptingStates = Arrays.copyOf(toCopy.acceptingStates, toCopy.acceptingStates.length);
-		this.initialState = new DFANode(toCopy.initialState);
-		this.sigma = Arrays.copyOf(toCopy.sigma, toCopy.sigma.length);
-	}
-	
 	public MinimizedDFA minimize() {
 		return new MinimizedDFA(this);
 	}
@@ -79,17 +118,6 @@ public class DFA {
 		}
 		return currentState.isAccepting();
 	}
-	
-	
-//	private boolean stateExists(DFANode state, DFANode ... checks) {
-//		for(DFANode d : checks) {
-//			if (d.equals(state)) {
-//				return true;
-//			}
-//		}
-//
-//		return false;
-//	}
 	
 	private DFANode getEquivalentState(DFANode state, DFANode ... existingStates) {
 		for(DFANode d : existingStates) {
@@ -156,15 +184,57 @@ public class DFA {
 		sb.append(this.initialState.getLabel() + ": Initial State\n");
 		sb.append("[");
 		int groupCount = 1;
+		int sequenceStart = -2;
+		int previousState = -2;
 		for(DFANode s : this.acceptingStates) {
-			sb.append(s.getLabel() + " ");
+			int currentState = Integer.parseInt(s.getLabel());
+			if(previousState != currentState - 1) {
+				if(sequenceStart >= 0) {
+					if(sequenceStart - previousState == 0) {
+						 sb.append(sequenceStart + " ");
+					} else {
+						sb.append(sequenceStart + "-" + previousState + " ");
+					}
+					sequenceStart = currentState;
+					groupCount++;
+				}
+				sequenceStart = currentState;
+			}
+			previousState = currentState;
 			if (groupCount % 10 == 0)
 				sb.append("\n");
-			groupCount++;
 		}
+		sb.append(sequenceStart + "-" + this.acceptingStates[this.acceptingStates.length - 1].getLabel() + " ");
 		sb.append("]: Accepting state(s)");
 		
 		return sb.toString();
+	}
+	
+	public static void main(String[] args) {
+		if(args.length < 2) {
+			System.out.println("NFA requires (2) arguments");
+			return;
+		}
+		
+		String contents = Reader.readEntireFile(args[0]);
+		String[] testInputs = Reader.readIntoLines(args[1]);
+		
+		DFA dfa = new DFA(contents);
+		MinimizedDFA mini = dfa.minimize();
+		
+		if(args.length >= 3) {
+			int limit = Integer.parseInt(args[2]);
+			System.out.println("\nDFA:\n");
+			System.out.println(dfa.toPresentationString(limit));
+			System.out.println("\nMinimized DFA:\n");
+			System.out.println(mini.toPresentationString(limit));
+		} else {
+			System.out.println("\nDFA:\n");
+			System.out.println(dfa.toString());
+			System.out.println("\nMinimized DFA:\n");
+			System.out.println(mini.toString());
+		}
+		
 	}
 	
 	

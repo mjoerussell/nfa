@@ -136,7 +136,7 @@ public class MinimizedDFA {
 		return sb.toString();
 	}
 	
-	public String toPresentationString(int limit) {
+public String toPresentationString(int limit) {
 		
 		StringBuilder sb = new StringBuilder();
 		sb.append("Sigma:\t");
@@ -161,22 +161,49 @@ public class MinimizedDFA {
 		sb.append(this.initialState.getLabel() + ": Initial State\n");
 		sb.append("[");
 		int groupCount = 1;
+		int sequenceStart = -2;
+		int previousState = -2;
 		for(DFANode s : this.acceptingStates) {
-			sb.append(s.getLabel() + " ");
+			int currentState = Integer.parseInt(s.getLabel());
+			if(previousState != currentState - 1) {
+				if(sequenceStart >= 0) {
+					if(sequenceStart - previousState == 0) {
+						 sb.append(sequenceStart + " ");
+					} else {
+						sb.append(sequenceStart + "-" + previousState + " ");
+					}
+					sequenceStart = currentState;
+					groupCount++;
+				}
+				sequenceStart = currentState;
+			}
+			previousState = currentState;
 			if (groupCount % 10 == 0)
 				sb.append("\n");
-			groupCount++;
 		}
+		sb.append(sequenceStart + "-" + this.acceptingStates[this.acceptingStates.length - 1].getLabel() + " ");
 		sb.append("]: Accepting state(s)");
 		
 		return sb.toString();
 	}
 	
+	/**
+	 * Remove an item from a list, and then add a multitude of items to the same list
+	 * @param list The list to modify
+	 * @param toRemove The item to be removed
+	 * @param replacements The items to add to the list
+	 */
 	private <T> void replaceWith(ArrayList<T> list, T toRemove, T ... replacements) {
 		list.remove(toRemove);
 		list.addAll(Arrays.asList(replacements));
 	}
 	
+	/**
+	 * Initialize the 'P' set of Hopcroft's algorithm using a list of states. States are
+	 * partitioned based on whether or not they are accepting.
+	 * @param states The states to partition
+	 * @return A new list of lists of DFANodes which have been partitioned
+	 */
 	private ArrayList<ArrayList<DFANode>> initializePartitionSets(DFANode[] states) {
 		ArrayList<DFANode> acceptingPartition = new ArrayList<>();
 		ArrayList<DFANode> nonacceptingPartition = new ArrayList<>();
@@ -195,24 +222,42 @@ public class MinimizedDFA {
 		return partitions;
 	}
 	
-	private ArrayList<DFANode> filterCanReach(List<DFANode> filterFrom, ArrayList<DFANode> toReach, char transition) {
+	/**
+	 * Filter a list of DFANodes based on if their transition on 'c' reaches any
+	 * of the nodes in 'toReach'
+	 * @param filterFrom The list of DFANodes to filter
+	 * @param toReach The goal states to be reached by the transition on 'c'
+	 * @param c The transition character
+	 * @return A new list of filtered DFANodes
+	 */
+	private ArrayList<DFANode> filterCanReach(List<DFANode> filterFrom, ArrayList<DFANode> toReach, char c) {
 		return (ArrayList<DFANode>) filterFrom.stream()
-				.filter(s -> toReach.contains(s.applyTransition(transition)))
+				.filter(s -> toReach.contains(s.applyTransition(c)))
 				.collect(Collectors.toList());
 	}
 	
+	/**
+	 * Find the intersection of two lists of DFANodes
+	 * @param a The first list of DFANodes
+	 * @param b The second list of DFANodes
+	 * @return A new list of DFANodes
+	 */
 	private ArrayList<DFANode> intersect(ArrayList<DFANode> a, ArrayList<DFANode> b) {
 		ArrayList<DFANode> intersection = new ArrayList<>();
-		
 		for(DFANode check : a) {
 			if(b.contains(check)) {
 				intersection.add(check);
 			}
 		}
-		
 		return intersection;
 	}
 	
+	/**
+	 * Find 'from'\'toSubtract' (aka 'from'-'toSubtract')
+	 * @param from The list to subtract from
+	 * @param toSubtract The list to be subtracted
+	 * @return A new list of DFANodes
+	 */
 	private ArrayList<DFANode> subtractSet(ArrayList<DFANode> from, ArrayList<DFANode> toSubtract) {
 		ArrayList<DFANode> subtraction = new ArrayList<>();
 		for(DFANode check : from) {

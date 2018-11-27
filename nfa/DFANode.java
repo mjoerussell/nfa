@@ -10,13 +10,10 @@ public class DFANode {
 	private HashMap<Character, DFANode> transitions;
 	private boolean isAccepting;
 	
-//	private ArrayList<DFANode> distinguishable;
-	
 	private NFANode[] enclosed;
 	
 	public DFANode() {
 		this.transitions = new HashMap<>();
-//		this.distinguishable = new ArrayList<>();
 	}
 	
 	public DFANode(DFANode toCopy) {
@@ -24,13 +21,11 @@ public class DFANode {
 		this.transitions = new HashMap<>(toCopy.transitions);
 		this.isAccepting = toCopy.isAccepting;
 		this.enclosed = Arrays.copyOf(toCopy.enclosed, toCopy.enclosed.length);
-//		this.distinguishable = new ArrayList<>(toCopy.distinguishable);
 	}
 	
 	public DFANode(NFANode ... enclosed) {
 		this.transitions = new HashMap<>();
 		this.enclosed = enclosed;
-//		this.distinguishable = new ArrayList<>();
 	}
 	
 	/**
@@ -190,6 +185,9 @@ public class DFANode {
 	public boolean equals(Object other) {
 		if(other instanceof DFANode) {
 			DFANode otherDFA = (DFANode) other;
+			if(this.enclosed == null && otherDFA.enclosed == null) {
+				return this.getLabel().equals(otherDFA.getLabel());
+			}
 			if (this.enclosed.length != otherDFA.getEnclosed().length)
 				return false;
 			for(NFANode nfa : this.enclosed) {
